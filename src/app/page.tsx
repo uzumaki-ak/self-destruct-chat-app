@@ -2,6 +2,9 @@
 import { useEffect, useState } from "react";
 import { nanoid } from "nanoid";
 import { COOLNAMES } from "@/constants/username";
+import { useMutation } from "@tanstack/react-query";
+import { client } from "@/lib/client";
+import { useRouter } from "next/navigation";
 
 const STORAGE_KEY = "chat_username";
 const generateUsername = () => {
@@ -9,8 +12,12 @@ const generateUsername = () => {
   return `ats-${word}-${nanoid(7)}`;
 };
 
+
+
 export default function Home() {
   const [username, setUsername] = useState("");
+
+  const router = useRouter()
 
   // to ensure user get same username everythime reerender
   useEffect(() => {
@@ -27,6 +34,18 @@ export default function Home() {
     };
     main();
   }, []);
+
+  //if this func called it will perfom its work #using reac-query tanstack
+  //mutate is to invoke this func we can anme it anything
+  const { mutate: createRoom } = useMutation({
+    mutationFn: async () => {
+      const res = await client.room.create.post();
+
+      if(res.status === 200) {
+            router.push(`/room/${res.data?.roomId}`)
+      }
+    },
+  });
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4">
@@ -49,7 +68,10 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            <button className="w-full bg-zinc-100 text-black p-3 text-sm font-bold hover:bg-zinc-50 hover:text-black transition-colors mt-2 cursor-pointer disabled:opacity-50">
+            <button
+              className="w-full bg-zinc-100 text-black p-3 text-sm font-bold hover:bg-zinc-50 hover:text-black transition-colors mt-2 cursor-pointer disabled:opacity-50"
+              onClick={() => createRoom()}
+            >
               CREATE SECURE ROOM
             </button>
           </div>
